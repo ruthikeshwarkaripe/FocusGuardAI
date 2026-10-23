@@ -280,22 +280,115 @@ document.getElementById("liveScore").textContent=focus;document.getElementById("
 }
 function togglePause(){paused=!paused;document.getElementById("pauseBtn").textContent=paused?"Resume":"Pause";showToast(paused?"Session paused":"Session resumed")}
 
-function simulate(type){
-const decision=decideActivity(type),now=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
-const names={study:"📚 Study app",whatsapp:"💬 WhatsApp",youtube:"📺 YouTube",instagram:"📱 Instagram",chrome:"🌐 Chrome"};
-activities.unshift({app:names[type],time:now,status:decision.status,cls:decision.cls,detail:decision.reason});
-activities=activities.slice(0,8);renderActivities("liveActivities");
-decisions.push({type,status:decision.status,confidence:decision.confidence,reason:decision.reason});
+async function simulate(type){
+  const names={
+    study:"📚 Study app",
+    whatsapp:"💬 WhatsApp",
+    youtube:"📺 YouTube",
+    instagram:"📱 Instagram",
+    chrome:"🌐 Chrome"
+  };
 
-focus=Math.max(0,Math.min(100,focus+decision.score));
-if(decision.status==="Distracting")distractions++;
-updateTimer();
-document.getElementById("latestDecision").textContent=decision.status+" · "+Math.round(decision.confidence*100)+"% confidence";
-document.getElementById("latestReason").textContent=decision.reason;
+  try{
+    const response=await fetch("http://127.0.0.1:8000/analyze",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        subject:currentSession.subject,
+        topic:currentSession.topic,
+        goal:currentSession.goal,
+        activity:type
+      })
+    });
 
-if(decision.action==="alert")showAlert(type,decision);
-else if(decision.action==="ask")showAlert(type,decision);
-else showToast(type==="study"?"Productive activity detected":decision.status+" — session continues");
+    if(!response.ok){
+      throw new Error("Backend request failed");
+    }
+
+    const backendDecision=await response.json();
+
+    const decision={
+      status:backendDecision.decision,
+      cls:
+        backendDecision.decision==="Productive"
+          ?"productive"
+          :backendDecision.decision==="Distracting"
+          ?"distracting"
+          :"uncertain",
+      score:
+        backendDecision.decision==="Productive"
+          ?2
+          :backendDecision.decision==="Distracting"
+          ?-8
+          :-1,
+      reason:backendDecision.reason,
+      confidence:backendDecision.confidence,
+      action:
+        backendDecision.decision==="Distracting"
+          ?"alert"
+          :backendDecision.decision==="Uncertain"
+          ?"ask"
+          :"continue"
+    };
+
+    const now=new Date().toLocaleTimeString([],{
+      hour:"2-digit",
+      minute:"2-digit"
+    });
+
+    activities.unshift({
+      app:names[type],
+      time:now,
+      status:decision.status,
+      cls:decision.cls,
+      detail:decision.reason
+    });
+
+    activities=activities.slice(0,8);
+    renderActivities("liveActivities");
+
+    decisions.push({
+      type,
+      status:decision.status,
+      confidence:decision.confidence,
+      reason:decision.reason
+    });
+
+    focus=Math.max(0,Math.min(100,focus+decision.score));
+
+    if(decision.status==="Distracting"){
+      distractions++;
+    }
+
+    updateTimer();
+
+    document.getElementById("latestDecision").textContent=
+      decision.status+" · "+Math.round(decision.confidence*100)+"% confidence";
+
+    document.getElementById("latestReason").textContent=
+      decision.reason;
+
+    if(decision.action==="alert"){
+      showAlert(type,decision);
+    }else if(decision.action==="ask"){
+      showAlert(type,decision);
+    }else{
+      showToast("Backend: "+decision.status+" activity detected");
+    }
+
+  }catch(error){
+    console.error("FastAPI connection error:",error);
+
+    showToast("Could not connect to FastAPI");
+
+    document.getElementById("latestDecision").textContent=
+      "Backend connection error";
+
+    document.getElementById("latestReason").textContent=
+      "Make sure the FastAPI server is running on port 8000.";
+  }
 }
 
 function showAlert(type,d){
