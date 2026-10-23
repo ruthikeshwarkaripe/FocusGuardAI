@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>FocusGuard AI — Step 3</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root{--bg:#f4f6fa;--card:#fff;--text:#172033;--muted:#718096;--line:#e3e7ee;--primary:#6257ff;--green:#159a63;--yellow:#c98b12;--red:#d34343;--sidebar:#111827;--sidebar2:#252c3c;--shadow:0 8px 28px rgba(20,30,50,.06)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,"Segoe UI",Arial,sans-serif;color:var(--text);background:var(--bg)}
+button,input,select{font:inherit}button{cursor:pointer}.app{display:flex;min-height:100vh}
+.sidebar{width:240px;min-width:240px;height:100vh;position:sticky;top:0;background:var(--sidebar);color:#fff;padding:24px 16px;display:flex;flex-direction:column}
+.brand{font-size:20px;font-weight:800;padding:7px 12px 30px}.brand span{color:#958dff}
+.nav{width:100%;border:0;background:transparent;color:#aeb7ca;text-align:left;padding:12px 14px;border-radius:9px;font-weight:600;margin-bottom:5px}.nav:hover,.nav.active{background:var(--sidebar2);color:#fff}
+.sidebar-bottom{margin-top:auto;color:#69748a;font-size:9px;line-height:1.6;padding:10px 12px}
+.main{flex:1;max-width:1550px;width:100%;margin:auto;padding:34px 44px;min-height:100vh}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}.top h1{font-size:29px;margin:0;letter-spacing:-.8px}.sub{font-size:12px;color:var(--muted);margin-top:6px}.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#dfdcff;color:#5148d6;font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:22px}.two{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(360px,.65fr);gap:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:23px;box-shadow:var(--shadow)}
+.label{font-size:10px;color:var(--muted);font-weight:800;letter-spacing:.45px;text-transform:uppercase}.metric{font-size:29px;font-weight:800;letter-spacing:-1px;margin-top:8px}.delta{font-size:11px;color:var(--green);font-weight:600;margin-top:7px}.section-title{font-size:16px;font-weight:800;margin-bottom:16px}
+.dashboard-panel{min-height:390px}.activity{display:flex;align-items:center;gap:13px;padding:14px 0;border-bottom:1px solid var(--line)}.activity:last-child{border-bottom:0}.appicon{width:38px;height:38px;border-radius:10px;background:#eef0f6;display:grid;place-items:center;font-size:17px;flex-shrink:0}.activity-main{flex:1}.activity-name{font-size:13px;font-weight:700}.activity-time{font-size:11px;color:var(--muted);margin-top:4px}.pill{font-size:10px;font-weight:800;border-radius:999px;padding:5px 8px;white-space:nowrap}.productive{background:#e6f7ef;color:#18784e}.uncertain{background:#fff4d9;color:#956600}.distracting{background:#ffe7e7;color:#b93434}
+.focus-score{text-align:center;padding:18px 0 25px}.focus-number{font-size:58px;font-weight:800;letter-spacing:-3px}.bar-row{display:grid;grid-template-columns:105px 1fr 45px;align-items:center;gap:10px;font-size:12px;margin:14px 0}.bar{height:8px;background:#eceef4;border-radius:99px;overflow:hidden}.bar div{height:100%;background:var(--primary);border-radius:99px}
+.btn{border:0;border-radius:9px;padding:11px 16px;font-weight:700;font-size:12px}.primary{background:var(--primary);color:#fff}.secondary{background:#efedff;color:#5148d6}.ghost{background:#f2f4f7;color:#465067}.danger{background:#fff0f0;color:#c23535}.btn:hover{filter:brightness(.97)}
+.field{margin:17px 0}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:7px}.field input,.field select{width:100%;padding:12px;border:1px solid #dce1e9;border-radius:9px;outline:none;background:#fff;color:var(--text)}.field input:focus,.field select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(98,87,255,.08)}
+.timer{font-size:70px;font-weight:800;letter-spacing:-4px;margin:34px 0 15px}.progress{height:8px;background:#eceef4;border-radius:99px;overflow:hidden}.progress>div{height:100%;width:0;background:var(--primary);transition:width .25s}
+.ai-box{margin-top:18px;padding:14px;background:#f6f5ff;border-left:4px solid var(--primary);border-radius:8px;color:#4c566a;font-size:12px;line-height:1.55}
+.decision-box{border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:15px;background:#fafbfc}.decision-title{font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:800;letter-spacing:.4px}.decision-main{font-size:18px;font-weight:800;margin-top:7px}.decision-reason{font-size:12px;color:#586276;line-height:1.55;margin-top:7px}
+.chip{display:inline-block;border-radius:999px;padding:5px 8px;font-size:10px;font-weight:800;margin:4px 4px 0 0;background:#eef0f5;color:#536078}.match{background:#e7f7ef;color:#18784e}.mismatch{background:#ffe8e8;color:#b93636}.ambiguous{background:#fff4d8;color:#956600}
+.hidden{display:none!important}.modal-bg{display:none;position:fixed;inset:0;background:rgba(10,15,25,.5);z-index:50;align-items:center;justify-content:center;padding:20px}.modal-bg.show{display:flex}.modal{width:min(550px,100%);background:white;border-radius:18px;padding:27px;box-shadow:0 30px 90px rgba(0,0,0,.25)}.modal-actions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-top:22px}.reason{background:#f7f8fb;border-radius:11px;padding:13px;margin:15px 0;font-size:12px;color:#4d576b;line-height:1.5}
+.history-row{display:grid;grid-template-columns:1.2fr 1fr 120px 90px 100px;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);align-items:center;font-size:12px}.history-row:last-child{border-bottom:0}
+.toast{position:fixed;right:28px;bottom:28px;background:#172033;color:#fff;padding:12px 16px;border-radius:10px;font-size:12px;box-shadow:0 15px 35px rgba(0,0,0,.18);opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s;z-index:100}.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:1100px){.main{padding:28px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.two{grid-template-columns:1fr}}@media(max-width:750px){.sidebar{width:190px;min-width:190px}.main{padding:22px}}@media(max-width:600px){.sidebar{display:none}.main{padding:18px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<div class="brand">Focus<span>Guard</span> AI</div>
+<button class="nav active" data-view="dashboard">🏠 &nbsp; Dashboard</button>
+<button class="nav" data-view="session">⏱ &nbsp; Study Session</button>
+<button class="nav" data-view="stats">📊 &nbsp; Statistics</button>
+<div class="sidebar-bottom">FOCUSGUARD AI<br>WINDOWS PROTOTYPE — STEP 3<br><br>Context-aware decision engine enabled.</div>
+</aside>
+
+<main class="main">
+<div class="top">
+<div><h1 id="pageTitle">Good morning 👋</h1><div class="sub" id="pageSub">Ready to protect your focus?</div></div>
+<div class="avatar">FG</div>
+</div>
+
+<section id="dashboardView">
+<div class="grid">
+<div class="card"><div class="label">Focus score</div><div class="metric" id="dashScore">86</div><div class="delta">From completed sessions</div></div>
+<div class="card"><div class="label">Study time today</div><div class="metric" id="dashTime">0m</div><div class="delta">Saved automatically</div></div>
+<div class="card"><div class="label">Distractions</div><div class="metric" id="dashDistractions">0</div><div class="delta" style="color:#c98b12">During completed sessions</div></div>
+<div class="card"><div class="label">Productivity</div><div class="metric" id="dashProductivity">100%</div><div class="delta">Based on activity decisions</div></div>
+</div>
+<div class="two">
+<div class="card dashboard-panel"><div class="section-title">Recent Activity</div><div id="activityList"></div></div>
+<div class="card dashboard-panel">
+<div class="section-title">Today's Focus</div>
+<div class="focus-score"><div class="focus-number" id="scoreCircle">86</div><div class="sub">Average focus score</div></div>
+<div class="bar-row"><span>Productive</span><div class="bar"><div id="prodBar" style="width:82%"></div></div><b id="prodPct">82%</b></div>
+<div class="bar-row"><span>Uncertain</span><div class="bar"><div id="uncertainBar" style="width:10%"></div></div><b id="uncertainPct">10%</b></div>
+<div class="bar-row"><span>Distracting</span><div class="bar"><div id="distractBar" style="width:8%"></div></div><b id="distractPct">8%</b></div>
+<button class="btn primary" style="width:100%;margin-top:17px" onclick="openSession()">Start Study Session</button>
+</div>
+</div>
+</section>
+
+<section id="sessionView" class="hidden">
+<div id="setupPanel" class="card" style="max-width:850px;margin:auto;min-height:560px">
+<div class="section-title">Start a Focused Session</div>
+<div class="sub">The decision engine uses your subject, topic and goal as context. It does not simply label apps as good or bad.</div>
+<div class="field"><label>Subject</label><input id="subject" value="Physics" placeholder="e.g. Physics"></div>
+<div class="field"><label>Topic</label><input id="topic" value="Electromagnetic Induction" placeholder="e.g. Electromagnetic Induction"></div>
+<div class="field"><label>Goal</label><input id="goal" value="Complete 20 practice questions" placeholder="What do you want to accomplish?"></div>
+<div class="field"><label>Duration</label><select id="duration"><option value="1">1 minute — quick test</option><option value="5" selected>5 minutes — demo</option><option value="25">25 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option></select></div>
+<button class="btn primary" style="width:100%;margin-top:25px" onclick="startSession()">Start Session</button>
+</div>
+
+<div id="livePanel" class="hidden">
+<div class="two">
+<div class="card" style="min-height:510px">
+<div class="label">CURRENT SESSION</div><h2 id="liveTitle" style="margin:10px 0 3px"></h2><div class="sub" id="liveTopic"></div><p id="liveGoal"></p>
+<div class="timer" id="timer">05:00</div><div class="progress"><div id="timerProgress"></div></div>
+<div style="display:flex;gap:9px;margin-top:22px"><button class="btn secondary" id="pauseBtn" onclick="togglePause()">Pause</button><button class="btn danger" onclick="endSession()">End Session</button></div>
+</div>
+<div class="card" style="min-height:510px">
+<div class="section-title">Focus Monitor</div><div class="metric" id="liveScore">100</div><div class="sub">Current focus score</div>
+<div style="margin-top:28px"><div class="label">Study Time</div><div class="metric" style="font-size:24px" id="liveStudy">0m</div></div>
+<div style="margin-top:23px"><div class="label">Distractions</div><div class="metric" style="font-size:24px" id="liveDistractions">0</div></div>
+<div class="decision-box"><div class="decision-title">Latest Decision</div><div class="decision-main" id="latestDecision">Waiting for activity</div><div class="decision-reason" id="latestReason">Start your session and test an activity.</div></div>
+</div>
+</div>
+
+<div class="card" style="margin-top:20px">
+<div class="section-title">Activity Monitor</div>
+<div class="sub">Test how the decision engine responds to the same app in different study contexts.</div>
+<div id="liveActivities"></div>
+<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:18px">
+<button class="btn ghost" onclick="simulate('study')">📚 Study App</button>
+<button class="btn ghost" onclick="simulate('whatsapp')">💬 WhatsApp</button>
+<button class="btn ghost" onclick="simulate('youtube')">📺 YouTube</button>
+<button class="btn ghost" onclick="simulate('instagram')">📱 Instagram</button>
+<button class="btn ghost" onclick="simulate('chrome')">🌐 Chrome</button>
+</div>
+</div>
+</div>
+
+<div id="summaryPanel" class="card hidden" style="max-width:900px;margin:auto;min-height:520px;text-align:center">
+<div style="font-size:50px;margin-top:20px">🎉</div><h2>Session Complete</h2><div class="sub">The session and decision results were saved locally.</div>
+<div class="grid" style="margin-top:30px">
+<div class="card"><div class="label">Study Time</div><div class="metric" id="sumTime">0m</div></div>
+<div class="card"><div class="label">Focus Score</div><div class="metric" id="sumScore">100</div></div>
+<div class="card"><div class="label">Distractions</div><div class="metric" id="sumDistractions">0</div></div>
+<div class="card"><div class="label">Productivity</div><div class="metric" id="sumProductivity">100%</div></div>
+</div>
+<div class="decision-box" style="text-align:left"><div class="decision-title">Decision Engine Summary</div><div id="sumDecisionText" class="decision-reason"></div></div>
+<button class="btn primary" onclick="newSession()" style="margin-top:20px">Start Another Session</button>
+<button class="btn ghost" onclick="switchView('stats')" style="margin-top:20px;margin-left:7px">View Statistics</button>
+</div>
+</section>
+
+<section id="statsView" class="hidden">
+<div class="grid">
+<div class="card"><div class="label">Total Study Time</div><div class="metric" id="statTime">0m</div></div>
+<div class="card"><div class="label">Average Focus</div><div class="metric" id="statFocus">0</div></div>
+<div class="card"><div class="label">Sessions</div><div class="metric" id="statSessions">0</div></div>
+<div class="card"><div class="label">Total Distractions</div><div class="metric" id="statDistractions">0</div></div>
+</div>
+<div class="card"><div class="section-title">Session History</div><div id="history"></div></div>
+</section>
+</main>
+</div>
+
+<div class="modal-bg" id="alertModal">
+<div class="modal">
+<div style="font-size:32px" id="alertIcon">⚠️</div><h2 id="alertTitle">Focus Check</h2><p id="alertText"></p>
+<div class="reason" id="alertReason"></div>
+<div class="ai-box"><b>Decision Engine</b><br><span id="alertAI"></span></div>
+<div class="modal-actions">
+<button class="btn ghost" onclick="takeBreak()">Take a 5 min Break</button>
+<button class="btn danger" onclick="endFromAlert()">End Session</button>
+<button class="btn primary" onclick="returnToStudy()">Return to Study</button>
+</div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY="focusguard_sessions_step3";
+let timerId=null,secondsLeft=0,totalSeconds=0,paused=false,focus=100,distractions=0,currentSession=null;
+let decisions=[];
+let activities=[
+{app:"📚 Study app",time:"Today",status:"Productive",cls:"productive",detail:"Aligned with study goal"},
+{app:"💬 WhatsApp",time:"Today",status:"Uncertain",cls:"uncertain",detail:"May be study-related"},
+{app:"📺 YouTube",time:"Today",status:"Uncertain",cls:"uncertain",detail:"Needs context"},
+{app:"📱 Instagram",time:"Today",status:"Distracting",cls:"distracting",detail:"Usually unrelated"}
+];
+
+function getSessions(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]")}catch(e){return[]}}
+function saveSessions(v){localStorage.setItem(STORAGE_KEY,JSON.stringify(v))}
+function todayKey(){return new Date().toISOString().slice(0,10)}
+function formatMinutes(m){m=Math.max(0,Math.round(m));return m<60?m+"m":Math.floor(m/60)+"h "+(m%60)+"m"}
+function esc(v){return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+
+function contextTokens(text){
+return String(text).toLowerCase().replace(/[^a-z0-9\s]/g," ").split(/\s+/).filter(Boolean);
+}
+function tokenOverlap(a,b){
+const A=new Set(contextTokens(a)),B=new Set(contextTokens(b));let n=0;
+A.forEach(x=>{if(B.has(x))n++});return n;
+}
+
+/*
+ STEP 3 DECISION ENGINE
+ The engine is intentionally rule-based for now.
+ Gemini will replace/augment this layer later.
+*/
+function decideActivity(type){
+const s=currentSession||{};
+const context=[s.subject,s.topic,s.goal].join(" ").toLowerCase();
+const topic=contextTokens(s.topic||"");
+const goal=contextTokens(s.goal||"");
+const subject=contextTokens(s.subject||"");
+
+if(type==="study"){
+return {status:"Productive",cls:"productive",score:5,reason:"The activity is explicitly a study tool and directly supports the session.",confidence:0.98,action:"continue"};
+}
+
+if(type==="whatsapp"){
+const studyWords=["question","assignment","homework","class","teacher","professor","study","exam","notes","project","lab","group","doubt","problem","revision"];
+const hits=studyWords.filter(w=>context.includes(w)).length;
+if(hits>=2){
+return {status:"Productive",cls:"productive",score:1,reason:"Your goal/context contains study or collaboration signals, so messaging could support the session.",confidence:0.72,action:"continue"};
+}
+return {status:"Uncertain",cls:"uncertain",score:-1,reason:"Messaging can be either study-related or unrelated. The prototype asks instead of blocking it.",confidence:0.48,action:"ask"};
+}
+
+if(type==="youtube"){
+const academic=["lecture","tutorial","concept","derivation","problem","questions","revision","course","chapter","physics","math","chemistry","biology","programming","coding"];
+const hits=academic.filter(w=>context.includes(w)).length;
+if(hits>=2 || tokenOverlap(s.topic||"", "lecture tutorial course concept problem")>0){
+return {status:"Productive",cls:"productive",score:1,reason:"The current study context suggests educational video content could help achieve the goal.",confidence:0.70,action:"continue"};
+}
+return {status:"Uncertain",cls:"uncertain",score:-2,reason:"YouTube has both educational and entertainment content, so the engine needs stronger evidence before calling it distracting.",confidence:0.45,action:"ask"};
+}
+
+if(type==="instagram"){
+return {status:"Distracting",cls:"distracting",score:-8,reason:"The activity has a high likelihood of interrupting the current study goal and has no detected study-context match.",confidence:0.90,action:"alert"};
+}
+
+if(type==="chrome"){
+const academic=["research","documentation","article","paper","reference","assignment","homework","study","course","tutorial","exam"];
+const hits=academic.filter(w=>context.includes(w)).length;
+if(hits>=2){
+return {status:"Productive",cls:"productive",score:2,reason:"Web browsing can support research or study when it matches the session goal.",confidence:0.68,action:"continue"};
+}
+return {status:"Uncertain",cls:"uncertain",score:-1,reason:"A browser can support study or distraction. The engine needs page-level context later.",confidence:0.44,action:"ask"};
+}
+return {status:"Uncertain",cls:"uncertain",score:-1,reason:"There is not enough context to classify this activity confidently.",confidence:0.35,action:"ask"};
+}
+
+function renderActivities(target){
+const el=document.getElementById(target);if(!el)return;
+el.innerHTML=activities.slice(0,8).map(a=>{
+const i=a.app.indexOf(" "),icon=i>-1?a.app.slice(0,i):"•",name=i>-1?a.app.slice(i+1):a.app;
+return `<div class="activity"><div class="appicon">${icon}</div><div class="activity-main"><div class="activity-name">${esc(name)}</div><div class="activity-time">${esc(a.time)} · ${esc(a.detail)}</div></div><span class="pill ${a.cls}">${a.status}</span></div>`;
+}).join("");
+}
+
+function updateDashboard(){
+const sessions=getSessions(),today=sessions.filter(s=>s.date===todayKey());
+const mins=today.reduce((a,s)=>a+s.minutes,0),dist=today.reduce((a,s)=>a+s.distractions,0);
+const avg=sessions.length?Math.round(sessions.reduce((a,s)=>a+s.focus,0)/sessions.length):86;
+const distracting=Math.min(30,dist*4),uncertain=dist?Math.min(25,dist*2):10,productive=Math.max(0,100-distracting-uncertain);
+document.getElementById("dashScore").textContent=avg;document.getElementById("scoreCircle").textContent=avg;
+document.getElementById("dashTime").textContent=formatMinutes(mins);document.getElementById("dashDistractions").textContent=dist;
+document.getElementById("dashProductivity").textContent=productive+"%";
+document.getElementById("prodPct").textContent=productive+"%";document.getElementById("uncertainPct").textContent=uncertain+"%";document.getElementById("distractPct").textContent=(100-productive-uncertain)+"%";
+document.getElementById("prodBar").style.width=productive+"%";document.getElementById("uncertainBar").style.width=uncertain+"%";document.getElementById("distractBar").style.width=(100-productive-uncertain)+"%";
+updateStats();
+}
+
+function updateStats(){
+const ss=getSessions(),total=ss.reduce((a,s)=>a+s.minutes,0),d=ss.reduce((a,s)=>a+s.distractions,0),avg=ss.length?Math.round(ss.reduce((a,s)=>a+s.focus,0)/ss.length):0;
+document.getElementById("statTime").textContent=formatMinutes(total);document.getElementById("statFocus").textContent=avg;document.getElementById("statSessions").textContent=ss.length;document.getElementById("statDistractions").textContent=d;
+const h=document.getElementById("history");
+if(!ss.length){h.innerHTML='<div class="sub" style="padding:24px 0">No completed sessions yet.</div>';return}
+h.innerHTML='<div class="history-row" style="font-weight:800;color:#718096"><div>Subject</div><div>Topic</div><div>Time</div><div>Focus</div><div>Distractions</div></div>'+ss.slice().reverse().map(s=>`<div class="history-row"><div><b>${esc(s.subject)}</b><div class="sub">${esc(s.date)}</div></div><div>${esc(s.topic)}</div><div>${formatMinutes(s.minutes)}</div><div>${s.focus}</div><div>${s.distractions}</div></div>`).join("");
+}
+
+function switchView(v){
+document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("active",x.dataset.view===v));
+["dashboard","session","stats"].forEach(x=>document.getElementById(x+"View").classList.toggle("hidden",x!==v));
+document.getElementById("pageTitle").textContent=v==="dashboard"?"Good morning 👋":v==="session"?"Study Session":"Statistics";
+document.getElementById("pageSub").textContent=v==="dashboard"?"Ready to protect your focus?":v==="session"?"Context-aware decision engine is active.":"Your saved focus history";
+if(v==="dashboard")updateDashboard();if(v==="stats")updateStats();
+}
+document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>switchView(b.dataset.view));
+function openSession(){switchView("session")}
+
+function startSession(){
+const subject=document.getElementById("subject").value.trim()||"Study";
+const topic=document.getElementById("topic").value.trim()||"General Study";
+const goal=document.getElementById("goal").value.trim()||"Make progress";
+totalSeconds=Number(document.getElementById("duration").value)*60;secondsLeft=totalSeconds;paused=false;focus=100;distractions=0;decisions=[];
+currentSession={subject,topic,goal};
+document.getElementById("setupPanel").classList.add("hidden");document.getElementById("summaryPanel").classList.add("hidden");document.getElementById("livePanel").classList.remove("hidden");
+document.getElementById("liveTitle").textContent=subject;document.getElementById("liveTopic").textContent=topic;document.getElementById("liveGoal").textContent="Goal: "+goal;
+document.getElementById("pauseBtn").textContent="Pause";document.getElementById("latestDecision").textContent="Waiting for activity";document.getElementById("latestReason").textContent="Start your session and test an activity.";
+renderActivities("liveActivities");updateTimer();clearInterval(timerId);timerId=setInterval(tick,1000);showToast("Study session started");
+}
+function tick(){if(paused)return;if(secondsLeft>0){secondsLeft--;updateTimer()}else finishSession()}
+function updateTimer(){
+const m=Math.floor(secondsLeft/60),s=secondsLeft%60;document.getElementById("timer").textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+document.getElementById("timerProgress").style.width=(totalSeconds?(1-secondsLeft/totalSeconds)*100:0)+"%";
+document.getElementById("liveScore").textContent=focus;document.getElementById("liveDistractions").textContent=distractions;document.getElementById("liveStudy").textContent=formatMinutes((totalSeconds-secondsLeft)/60);
+}
+function togglePause(){paused=!paused;document.getElementById("pauseBtn").textContent=paused?"Resume":"Pause";showToast(paused?"Session paused":"Session resumed")}
+
+function simulate(type){
+const decision=decideActivity(type),now=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+const names={study:"📚 Study app",whatsapp:"💬 WhatsApp",youtube:"📺 YouTube",instagram:"📱 Instagram",chrome:"🌐 Chrome"};
+activities.unshift({app:names[type],time:now,status:decision.status,cls:decision.cls,detail:decision.reason});
+activities=activities.slice(0,8);renderActivities("liveActivities");
+decisions.push({type,status:decision.status,confidence:decision.confidence,reason:decision.reason});
+
+focus=Math.max(0,Math.min(100,focus+decision.score));
+if(decision.status==="Distracting")distractions++;
+updateTimer();
+document.getElementById("latestDecision").textContent=decision.status+" · "+Math.round(decision.confidence*100)+"% confidence";
+document.getElementById("latestReason").textContent=decision.reason;
+
+if(decision.action==="alert")showAlert(type,decision);
+else if(decision.action==="ask")showAlert(type,decision);
+else showToast(type==="study"?"Productive activity detected":decision.status+" — session continues");
+}
+
+function showAlert(type,d){
+const uncertain=d.status==="Uncertain";
+document.getElementById("alertIcon").textContent=uncertain?"🟡":"🔴";
+document.getElementById("alertTitle").textContent=uncertain?"Focus Check":"Distraction Detected";
+document.getElementById("alertText").textContent=uncertain?"FocusGuard cannot confidently determine whether this activity supports your goal.":"This activity appears inconsistent with your current study goal.";
+document.getElementById("alertReason").textContent=d.reason;
+document.getElementById("alertAI").textContent="Classification: "+d.status+" · Confidence: "+Math.round(d.confidence*100)+"%. The prototype uses rules now; Gemini can provide deeper semantic reasoning in the next stage.";
+document.getElementById("alertModal").classList.add("show");
+}
+function returnToStudy(){document.getElementById("alertModal").classList.remove("show");showToast("Back to study")}
+function takeBreak(){document.getElementById("alertModal").classList.remove("show");paused=true;document.getElementById("pauseBtn").textContent="Resume";showToast("Break started")}
+function endFromAlert(){document.getElementById("alertModal").classList.remove("show");endSession()}
+function endSession(){clearInterval(timerId);timerId=null;document.getElementById("alertModal").classList.remove("show");finishSession()}
+
+function finishSession(){
+clearInterval(timerId);timerId=null;if(!currentSession)return;
+const elapsed=Math.max(0,totalSeconds-secondsLeft),minutes=Math.max(1,Math.round(elapsed/60));
+const session={date:todayKey(),subject:currentSession.subject,topic:currentSession.topic,goal:currentSession.goal,minutes,focus,distractions,decisions};
+const ss=getSessions();ss.push(session);saveSessions(ss);
+document.getElementById("livePanel").classList.add("hidden");document.getElementById("summaryPanel").classList.remove("hidden");
+document.getElementById("sumTime").textContent=formatMinutes(minutes);document.getElementById("sumScore").textContent=focus;document.getElementById("sumDistractions").textContent=distractions;
+document.getElementById("sumProductivity").textContent=Math.max(0,100-distractions*8)+"%";
+const counts=decisions.reduce((o,d)=>{o[d.status]=(o[d.status]||0)+1;return o},{});
+document.getElementById("sumDecisionText").innerHTML=`Productive: <b>${counts.Productive||0}</b> · Uncertain: <b>${counts.Uncertain||0}</b> · Distracting: <b>${counts.Distracting||0}</b><br><br>The engine evaluated activity against the session context instead of using a simple app blacklist.`;
+updateDashboard();showToast("Session saved");
+}
+function newSession(){document.getElementById("summaryPanel").classList.add("hidden");document.getElementById("setupPanel").classList.remove("hidden")}
+function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(showToast.t);showToast.t=setTimeout(()=>t.classList.remove("show"),1800)}
+
+renderActivities("activityList");updateDashboard();
+</script>
+</body>
+</html>
