@@ -311,6 +311,7 @@ async function simulate(type){
 
     const decision={
       status:backendDecision.decision,
+      source: backendDecision.source || "Unknown",
       cls:
         backendDecision.decision==="Productive"
           ?"productive"
@@ -368,7 +369,7 @@ async function simulate(type){
       decision.status+" · "+Math.round(decision.confidence*100)+"% confidence";
 
     document.getElementById("latestReason").textContent=
-      decision.reason;
+      decision.reason+ " · Decision source: " + decision.source;
 
     if(decision.action==="alert"){
       showAlert(type,decision);
@@ -397,7 +398,7 @@ document.getElementById("alertIcon").textContent=uncertain?"🟡":"🔴";
 document.getElementById("alertTitle").textContent=uncertain?"Focus Check":"Distraction Detected";
 document.getElementById("alertText").textContent=uncertain?"FocusGuard cannot confidently determine whether this activity supports your goal.":"This activity appears inconsistent with your current study goal.";
 document.getElementById("alertReason").textContent=d.reason;
-document.getElementById("alertAI").textContent="Classification: "+d.status+" · Confidence: "+Math.round(d.confidence*100)+"%. The prototype uses rules now; Gemini can provide deeper semantic reasoning in the next stage.";
+document.getElementById("alertAI").textContent="Classification: "+d.status+" · Confidence: "+Math.round(d.confidence*100)+"%. Gemini-powered reasoning is active. FocusGuard analyzes your study context and current activity to provide context-aware decisions.";
 document.getElementById("alertModal").classList.add("show");
 }
 function returnToStudy(){document.getElementById("alertModal").classList.remove("show");showToast("Back to study")}
